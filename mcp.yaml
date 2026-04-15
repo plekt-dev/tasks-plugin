@@ -1,0 +1,40 @@
+tools:
+  - name: list_tasks
+    description: "List tasks with optional filters for status, priority range, project_id, and result limit. Web URL: /p/tasks-plugin/board (kanban board) or /p/projects-plugin/project/{project_id}/tasks (project tasks)."
+  - name: create_task
+    description: "Create a new task. Title is required. Status defaults to pending, priority defaults to 3. Web URL: /p/tasks-plugin/board (kanban) or /p/projects-plugin/project/{project_id}/tasks (project view)."
+  - name: get_task
+    description: Retrieve a single task by its integer ID.
+  - name: update_task
+    description: Update one or more fields on an existing task by ID. Only supplied fields are changed.
+  - name: delete_task
+    description: Permanently delete a task by ID. Returns deleted=true if the row existed.
+  - name: get_task_detail
+    description: Retrieve a task with its comments, type info, and board columns.
+  - name: list_board_columns
+    description: "List board columns (statuses). IMPORTANT: columns are SCOPED PER PROJECT. Pass project_id to get a project's columns; omit it to get global orphan columns that are NOT visible on any board."
+  - name: create_board_column
+    description: "Create a new board column (status). CRITICAL: pass project_id or the column will be a global orphan invisible in every project's UI. Name must be unique within its project scope."
+  - name: update_board_column
+    description: Update a board column's label, position, or color. Identified by global id.
+  - name: delete_board_column
+    description: Delete a custom board column. Default columns and columns with tasks cannot be deleted.
+  - name: list_task_types
+    description: List all task types.
+  - name: create_task_type
+    description: Create a new task type with optional color and icon.
+  - name: update_task_type
+    description: Update a task type's label, color, or icon.
+  - name: delete_task_type
+    description: Delete a task type. Tasks with this type will have type_id cleared.
+  - name: list_comments
+    description: List comments for a task, ordered by creation time.
+  - name: create_comment
+    description: "Add a comment to a task. IMPORTANT: Always set author_name to your name (e.g. 'Claude') and author_type to 'agent' when posting as an AI agent."
+  - name: delete_comment
+    description: Delete a comment by ID.
+  - name: update_comment
+    description: Update the body of an existing comment by ID.
+signature:
+  public_key: 10791349620055924eceeb152f54c326da4fe7dcbb2ce2bc8ee0a9383289d057
+  signature: 0af97d1f55451ce6466b243fb6ef146e7cf6bfbe15b3810f5e30f18a596d9c6aa7d37ea1f806ad0e2661417be88a67cf4c283d333243fb12227a43177dd1220b

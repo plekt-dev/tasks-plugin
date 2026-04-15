@@ -1,0 +1,146 @@
+version: "1"
+tables:
+  - name: tasks
+    columns:
+      - name: id
+        type: INTEGER
+        primary_key: true
+        auto_increment: true
+        not_null: true
+      - name: title
+        type: TEXT
+        not_null: true
+      - name: description
+        type: TEXT
+      - name: status
+        type: TEXT
+        not_null: true
+        default: "'pending'"
+      - name: priority
+        type: INTEGER
+        not_null: true
+        default: "3"
+      - name: due_date
+        type: TEXT
+      - name: project_id
+        type: INTEGER
+      - name: type_id
+        type: INTEGER
+      - name: assignee_id
+        type: INTEGER
+      - name: created_at
+        type: TEXT
+        not_null: true
+      - name: updated_at
+        type: TEXT
+        not_null: true
+    indexes:
+      - name: idx_tasks_status
+        columns: [status]
+      - name: idx_tasks_priority
+        columns: [priority]
+      - name: idx_tasks_due_date
+        columns: [due_date]
+      - name: idx_tasks_project_id
+        columns: [project_id]
+      - name: idx_tasks_type_id
+        columns: [type_id]
+      - name: idx_tasks_assignee_id
+        columns: [assignee_id]
+
+  - name: board_columns
+    columns:
+      - name: id
+        type: INTEGER
+        primary_key: true
+        auto_increment: true
+        not_null: true
+      - name: name
+        type: TEXT
+        not_null: true
+      - name: label
+        type: TEXT
+        not_null: true
+      - name: position
+        type: INTEGER
+        not_null: true
+        default: "0"
+      - name: color
+        type: TEXT
+      - name: project_id
+        type: INTEGER
+      - name: is_default
+        type: INTEGER
+        not_null: true
+        default: "0"
+      - name: created_at
+        type: TEXT
+        not_null: true
+    indexes:
+      - name: idx_board_columns_name_project
+        columns: [name, project_id]
+        unique: true
+      - name: idx_board_columns_position
+        columns: [position]
+      - name: idx_board_columns_project_id
+        columns: [project_id]
+
+  - name: task_types
+    columns:
+      - name: id
+        type: INTEGER
+        primary_key: true
+        auto_increment: true
+        not_null: true
+      - name: name
+        type: TEXT
+        not_null: true
+      - name: label
+        type: TEXT
+        not_null: true
+      - name: color
+        type: TEXT
+      - name: icon
+        type: TEXT
+      - name: project_id
+        type: INTEGER
+      - name: created_at
+        type: TEXT
+        not_null: true
+    indexes:
+      - name: idx_task_types_name_project
+        columns: [name, project_id]
+        unique: true
+      - name: idx_task_types_project_id
+        columns: [project_id]
+
+  - name: comments
+    columns:
+      - name: id
+        type: INTEGER
+        primary_key: true
+        auto_increment: true
+        not_null: true
+      - name: task_id
+        type: INTEGER
+        not_null: true
+      - name: author_type
+        type: TEXT
+        not_null: true
+        default: "'user'"
+      - name: author_id
+        type: INTEGER
+      - name: author_name
+        type: TEXT
+        not_null: true
+      - name: body
+        type: TEXT
+        not_null: true
+      - name: created_at
+        type: TEXT
+        not_null: true
+    indexes:
+      - name: idx_comments_task_id
+        columns: [task_id]
+      - name: idx_comments_author
+        columns: [author_type, author_id]

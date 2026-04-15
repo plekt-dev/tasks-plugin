@@ -1,0 +1,276 @@
+{
+  "name": "tasks-plugin",
+  "version": "1.0.0",
+  "description": "Kanban for humans, MCP for agents. One board, same tasks. Per-project columns, task types, authored comments, eighteen MCP tools.",
+  "author": "Plekt",
+  "license": "MIT",
+  "min_core_version": "1.0.0",
+  "dependencies": {"projects-plugin": ">=1.0.0"},
+  "events": {
+    "emits": ["task.created", "task.updated", "task.deleted", "task.completed", "comment.created", "comment.deleted"],
+    "subscribes": ["project.deleted"]
+  },
+  "mcp": {
+    "tools": [
+      {
+        "name": "list_tasks",
+        "description": "List tasks with optional filters for status, priority range, project_id, type_id, assignee_id, and result limit.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "description": "Filter by board column status name." },
+            "limit": { "type": "integer", "minimum": 0 },
+            "project_id": { "type": "integer", "description": "Filter tasks by project ID." },
+            "type_id": { "type": "integer", "description": "Filter tasks by task type ID." },
+            "assignee_id": { "type": "integer", "description": "Filter tasks by assignee user ID." }
+          }
+        }
+      },
+      {
+        "name": "create_task",
+        "description": "Create a new task. Title is required. Response includes web_url with a link to the task.",
+        "input_schema": {
+          "type": "object",
+          "required": ["title"],
+          "properties": {
+            "title": { "type": "string" },
+            "project_id": { "type": "integer", "format": "project-select", "description": "Link task to a project." },
+            "description": { "type": "string", "format": "markdown" },
+            "priority": { "type": "integer", "default": 3 },
+            "status": { "type": "string", "format": "status-select", "description": "Board column status name. Defaults to pending." },
+            "type_id": { "type": "integer", "format": "type-select", "description": "Task type ID." }
+          }
+        }
+      },
+      {
+        "name": "get_task",
+        "description": "Retrieve a single task by its integer ID.",
+        "input_schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "integer" }
+          }
+        }
+      },
+      {
+        "name": "update_task",
+        "description": "Update one or more fields on an existing task by ID. Only supplied fields are changed.",
+        "input_schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "integer" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "status": { "type": "string", "description": "Board column status name." },
+            "priority": { "type": "integer" },
+            "due_date": { "type": "string" },
+            "type_id": { "type": "integer", "description": "Task type ID." },
+            "assignee_id": { "type": "integer", "description": "Assignee user ID." }
+          }
+        }
+      },
+      {
+        "name": "delete_task",
+        "description": "Permanently delete a task by ID. Cascade-deletes associated comments. Returns deleted=true if the row existed.",
+        "input_schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "integer" }
+          }
+        }
+      },
+      {
+        "name": "get_task_detail",
+        "description": "Retrieve a task with its comments, type info, and board columns.",
+        "input_schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "integer" }
+          }
+        }
+      },
+      {
+        "name": "list_board_columns",
+        "description": "List board columns (statuses) ordered by position. IMPORTANT: board columns are SCOPED PER PROJECT — each project has its own columns. Pass project_id to get a project's columns; omit it to get global columns (project_id IS NULL), which are NOT visible on any project's kanban board. To see what columns a project's board uses, always pass that project's id.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "project_id": { "type": "integer", "format": "project-select", "description": "Project to list columns for. Omit for global (orphan) columns." }
+          }
+        }
+      },
+      {
+        "name": "create_board_column",
+        "description": "Create a new board column (status). CRITICAL: columns are SCOPED PER PROJECT. You MUST pass project_id to create a column visible on that project's kanban board. Omitting project_id creates a GLOBAL orphan column (project_id IS NULL) that is invisible in every project's UI — almost never what you want. The (name, project_id) pair must be unique.",
+        "input_schema": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string", "description": "Slug name (e.g. in_review)." },
+            "label": { "type": "string", "description": "Display label (e.g. In Review)." },
+            "position": { "type": "integer", "description": "Sort position. Auto-appended if omitted." },
+            "color": { "type": "string", "description": "Hex color for column header." },
+            "project_id": { "type": "integer", "format": "project-select", "description": "REQUIRED for the column to appear on a project's board. Omit only if you intentionally want a global orphan column (rare)." }
+          }
+        }
+      },
+      {
+        "name": "update_board_column",
+        "description": "Update a board column's label, position, or color. The column is identified by its global id; project scoping is preserved.",
+        "input_schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "integer" },
+            "label": { "type": "string" },
+            "position": { "type": "integer" },
+            "color": { "type": "string" }
+          }
+        }
+      },
+      {
+        "name": "delete_board_column",
+        "description": "Delete a custom board column. Default columns (pending/in_progress/done) and columns with tasks cannot be deleted. Identified by global id regardless of project scope.",
+        "input_schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "integer" }
+          }
+        }
+      },
+      {
+        "name": "list_task_types",
+        "description": "List all task types.",
+        "input_schema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "create_task_type",
+        "description": "Create a new task type with optional color and icon.",
+        "input_schema": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string", "description": "Slug name (e.g. bug_fix)." },
+            "label": { "type": "string", "description": "Display label (e.g. Bug Fix)." },
+            "color": { "type": "string", "format": "color", "description": "Hex color." },
+            "icon": { "type": "string", "description": "Icon name from sprite." }
+          }
+        }
+      },
+      {
+        "name": "update_task_type",
+        "description": "Update a task type's label, color, or icon.",
+        "input_schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "integer" },
+            "label": { "type": "string" },
+            "color": { "type": "string", "format": "color" },
+            "icon": { "type": "string" }
+          }
+        }
+      },
+      {
+        "name": "delete_task_type",
+        "description": "Delete a task type. Tasks with this type will have type_id cleared.",
+        "input_schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "integer" }
+          }
+        }
+      },
+      {
+        "name": "list_comments",
+        "description": "List comments for a task, ordered by creation time.",
+        "input_schema": {
+          "type": "object",
+          "required": ["task_id"],
+          "properties": {
+            "task_id": { "type": "integer" }
+          }
+        }
+      },
+      {
+        "name": "create_comment",
+        "description": "Add a comment to a task. IMPORTANT: Always set author_name (e.g. 'Claude') and author_type='agent' when posting as an AI assistant.",
+        "input_schema": {
+          "type": "object",
+          "required": ["task_id", "body"],
+          "properties": {
+            "task_id": { "type": "integer" },
+            "body": { "type": "string", "format": "markdown" },
+            "author_name": { "type": "string", "description": "Display name of the commenter." },
+            "author_type": { "type": "string", "enum": ["user", "agent"], "description": "Type of author. Defaults to user." },
+            "author_id": { "type": "integer", "description": "User ID of the author." }
+          }
+        }
+      },
+      {
+        "name": "delete_comment",
+        "description": "Delete a comment by ID.",
+        "input_schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "integer" }
+          }
+        }
+      },
+      {
+        "name": "update_comment",
+        "description": "Update the body of an existing comment by ID.",
+        "input_schema": {
+          "type": "object",
+          "required": ["id", "body"],
+          "properties": {
+            "id": { "type": "integer" },
+            "body": { "type": "string" }
+          }
+        }
+      }
+    ],
+    "resources": []
+  },
+  "dashboard": {
+    "widgets": [
+      {
+        "id": "task_overview",
+        "title": "Recent Tasks",
+        "description": "Latest 5 tasks by creation date with status.",
+        "data_function": "get_task_overview",
+        "refresh_seconds": 30,
+        "width": "",
+        "link_template": "/p/projects-plugin/project/{project_id}/project-tasks?task={id}"
+      }
+    ]
+  },
+  "ui": {
+    "pages": [
+      {
+        "id": "project-tasks",
+        "title": "Tasks",
+        "icon": "kanban",
+        "data_function": "get_tasks_board",
+        "page_type": "kanban",
+        "nav_parent": "projects-plugin:projects",
+        "nav_order": 1,
+        "extension_points": ["task-card-badge", "task-card-actions"],
+        "frontend": {
+          "js_file": "plugin.js",
+          "css_file": "plugin.css"
+        }
+      }
+    ]
+  }
+}
